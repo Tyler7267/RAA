@@ -6,3 +6,5 @@ Results are validated against the published figures for this dataset.
 THE PROBLEM
 An insurer has to book a liability today for claims that have occurred but are not yet fully paid or even reported. The data available is a development triangle: each origin year's losses observed at successive valuation dates. Older years are nearly complete and recent years are barely developed. The reserving question is what those recent years will ultimately cost.
 
+DATA
+The RAA triangle: cumulative incurred losses for automatic facultative general liability business, origin years 1981-1990, reported by the Reinsurance Association of America. Comes from the R ChainLadder package.
