@@ -21,11 +21,11 @@ def link_ratios(tri):
     return out
 
 
-def development_factors(tri, n_years = None)
+def development_factors(tri, n_years = None):
 
     n = tri.shape[0]
     f = np.zeros(n - 1)
-    for i in range(n - 1)
+    for i in range(n - 1):
         rows = n - i - 1
         start = 0 if n_years is None else max(0, rows - n_years)
         num = np.nansum(tri[start:rows, i + 1])
