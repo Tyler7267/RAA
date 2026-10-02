@@ -58,3 +58,22 @@ def cumulative_factors(ldfs, tail = 1.0):
     return cdf
 
 
+def square_triangle(tri, ldfs, tail = 1.0):
+    """
+    Fill the lower-right of the triangle using the selected factors.
+    """
+    n = tri.shape[0]
+    full = tri.copy()
+    for i in range(1,n):
+        for j in range(1,n):
+            full[i,j] = full[i, j-1] * ldfs[j-1]
+    return full
+
+
+def latest_diagonal(tri):
+    """The most recent observed value for each year."""
+    n = tri.shape[0]
+    return np.array([tri[i, n - 1 - i] for i in range(n)])  
+
+
+  
