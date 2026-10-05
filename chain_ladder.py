@@ -1,6 +1,16 @@
 import numpy as np
 import pandas as pd
 
+"""
+Loss reserving methods for claims development triangles.
+
+1. Chain Ladder - project each origin year using observed development
+
+
+All functions take a cumulative triangle as a 2D numpy array with origin
+years along the rows and development periods (in months) across the columns
+Unobserved cells are labeled np.nan.
+"""
 
 def link_ratios(tri):
     """
@@ -76,4 +86,47 @@ def latest_diagonal(tri):
     return np.array([tri[i, n - 1 - i] for i in range(n)])  
 
 
-  
+###############################################################################
+#   RESERVING METHODS
+###############################################################################
+
+def chain_ladder(tri, ldfs = None, tail = 1.0, origins = None):
+    """
+    Chain ladder reserve estimate.
+    
+    Ultimate = latest observed loss x cumulative development factor.
+    IBNR = Ultimate - latest.
+    
+    This method relies on the assumption that past development is predictive
+    of future development. 
+    
+    Its weakness is leverage on the most recent years. 
+    """
+    n = tri.shape[0]
+    if ldfs is None:
+        ldfs = development_factors(tri)
+    cdf = cumulative_factors(ldfs, tail)
+    full = square_triangle(tri, ldfs, tail)
+    latest = latest_diagonal(tri)
+    
+    age = np.array([n - 1 - i for i in range(n)])
+    cdf_i = cdf[age]
+    ultimate = latest * cdf_i
+    ibnr = ultimate - latest
+
+    if origins is None:
+        index = pd.RangeIndex(n)
+    else:
+        index = pd.Index(origins)
+
+    return pd.DataFrame({
+        "latest": latest,
+        "cdf": cdf_i,
+        "pct_reported": 1.0 / cdf_i,
+        "ultimate": ultimate,
+        "IBNR": ibnr,
+    }, index=index)    
+    
+    
+    
+    
