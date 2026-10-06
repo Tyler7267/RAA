@@ -76,7 +76,8 @@ def square_triangle(tri, ldfs, tail = 1.0):
     full = tri.copy()
     for i in range(1,n):
         for j in range(1,n):
-            full[i,j] = full[i, j-1] * ldfs[j-1]
+            if np.isnan(full[i, j]):
+                full[i,j] = full[i, j-1] * ldfs[j-1]
     return full
 
 
@@ -212,9 +213,9 @@ def mack_standard_error(tri, ldfs = None, origins = None):
         
         
     if origins is None:
-        index = np.IndexRange(n)
+        index = pd.RangeIndex(n)
     else:
-        index = np.Index(origins)
+        index = pd.Index(origins)
         
     table = pd.DataFrame({
         "ibnr": ibnr,

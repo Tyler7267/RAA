@@ -42,3 +42,7 @@ No inflation or trend adjustment
 
 Mack measures parameter and process uncertainty in the chain ladder model. It does not capture model risk, like the possibility chain ladder is  the wrong method for this book.
 
+REFERENCE
+Mack, T.(1993). "Distribution-Free Calculation of the Standard Error of 
+Chain Ladder Reserve Estimates."
+ASTIN Bulletin 23(2), 213-225.
