@@ -1,3 +1,9 @@
+"""
+The RAA development triangle
+
+Cumulative incurred losses for automatic faculative general liability.
+"""
+
 import numpy as np
 
 NA = np.nan
@@ -18,3 +24,8 @@ TRIANGLE = np.array([
 ], dtype = float)
 
 
+EARNED_PREMIUM = np.array([
+    24000, 24960, 26997,  28077, 29200, 30368, 31582, 32846, 34160
+], dtype = float)
+
+EXPECTED_LOSS_RATIO = 0.70
