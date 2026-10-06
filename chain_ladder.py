@@ -124,9 +124,102 @@ def chain_ladder(tri, ldfs = None, tail = 1.0, origins = None):
         "cdf": cdf_i,
         "pct_reported": 1.0 / cdf_i,
         "ultimate": ultimate,
-        "IBNR": ibnr,
+        "ibnr": ibnr,
     }, index=index)    
     
+
+def bornhuetter_ferguson(tri, premium, elr, ldfs = None, tail = 1.0,
+                         origins = None):
+    
+    n = tri.shape[0]
+    if ldfs is None:
+        ldfs = development_factors(tri)
+    cdf = cumulative_factors(ldfs, tail)
+    
+    premium = np.asarray(premium, dtype = float)
+    elr = np.broadcast_to(np.asarray(elr,  dtype=float), (n,))
+    
+    latest = latest_diagonal(tri)
+    age = np.array([n - 1 - i for i in range(n)])
+    cdf_i = cdf[age]
+    pct_unreported = 1.0 - 1.0/cdf_i
+    
+    a_priori = premium * elr
+    ibnr = pct_unreported * a_priori
+    ultimate = latest + ibnr
+
+    if origins is None:
+        index = pd.RangeIndex(n)
+    else:
+        index = pd.Index(origins)
+
+    return pd.DataFrame({
+        "latest": latest,
+        "premium":  premium,
+        "a_priori_loss": a_priori,
+        "pct_unreported": pct_unreported,
+        "ultimate": ultimate,
+        "ibnr": ibnr,
+    }, index=index)
     
     
+def mack_standard_error(tri, ldfs = None, origins = None):
     
+    n = tri.shape[0]
+    if ldfs is None:
+        ldfs = development_factors(tri)
+    full = square_triangle(tri, ldfs)
+    latest = latest_diagonal(tri)
+    ultimate = full[:,-1]
+    ibnr = ultimate - latest
+    
+    colsum = np.array([np.nansum(tri[:n - i - 1, i]) for i in range(n-1)])
+    
+    sigma2 = np.zeros(n-1)
+    for i in range(n-2):
+        m = n - i - 1
+        C = tri[:m, i]
+        F = tri[:m, i + 1] / tri[:m, i]
+        sigma2[i] = np.sum(C * (F-ldfs[i]) ** 2) / (m-1)
+        
+    sigma2[n-2] = min(
+        sigma2[n-3] ** 2 / sigma2[n-4],
+        min(sigma2[n-3], sigma2[n-4])
+    )
+    
+    # Mean squared error per origin
+    mse = np.zeros(n)
+    for i in range(1, n):
+        s = 0.0
+        for j in range(n - 1 - i, n - 1):
+            s += (sigma2[j] / ldfs[j] ** 2) * (1.0 / full[i,j] + 
+                                               1.0 / colsum[j])
+        mse[i] = ultimate[i] ** 2 * s
+    se = np.sqrt(mse)
+    
+    # Total, includes covariance across origin years
+    total_mse = 0.0
+    for i in range(1, n):
+        inner = 0.0
+        for j in range(n - 1  - i, n - 1):
+            inner += 2.0 * sigma2[j] / (ldfs[j] ** 2 * colsum[j])
+            
+        total_mse += mse[i] + ultimate[i] * np.sum(ultimate[i + 1:]) * inner
+    se_total = np.sqrt(total_mse)
+    
+    with np.errstate(divide = "ignore", invalid = "ignore"):
+        cv = np.where(ibnr > 0, se / ibnr, np.nan)
+        
+        
+    if origins is None:
+        index = np.IndexRange(n)
+    else:
+        index = np.Index(origins)
+        
+    table = pd.DataFrame({
+        "ibnr": ibnr,
+        "mack_se": se,
+        "cv": cv
+    }, index = index)
+    
+    return table, se_total
